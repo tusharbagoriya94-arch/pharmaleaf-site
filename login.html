@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in · PharmaLeaf</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</head>
+<body>
+<main class="wrap" style="max-width:520px;padding-top:40px;padding-bottom:60px">
+  <h1 class="k" style="font-size:44px;margin:0 0 6px">Log in</h1>
+  <p class="muted" style="margin:0 0 20px">Enter your email. We send you a login link and a 6-digit code. No password needed.</p>
+  <div class="panel">
+    <form id="f1" class="form">
+      <label class="f">Email<input class="f" id="email" type="email" autocomplete="email" required></label>
+      <button class="btn btn-green" id="send">Send login link</button>
+    </form>
+    <form id="f2" class="form hide" style="margin-top:6px">
+      <p style="margin:0">Check your inbox (and spam folder) for an email from PharmaLeaf. Click the link in it, <b>or</b> type the 6-digit code here:</p>
+      <label class="f">6-digit code<input class="f" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label>
+      <button class="btn btn-green">Log in</button>
+      <a href="#" id="again" style="font-size:14px">Use a different email</a>
+    </form>
+    <div class="msg" id="m" style="margin-top:12px"></div>
+  </div>
+</main>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const $ = (id) => document.getElementById(id);
+  const next = PL.qs("next") || "library.html";
+  const safeNext = /^[a-z]+\.html(\?[\w=&%.-]*)?$/i.test(next) ? next : "library.html";
+  if (await PL.session()) { location.href = safeNext; return; }
+  PL.sb.auth.onAuthStateChange((ev, s) => { if (s) location.href = safeNext; });
+  $("f1").onsubmit = async (e) => {
+    e.preventDefault();
+    const email = $("email").value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return PL.msg($("m"), "Please enter a valid email address.", "err");
+    $("send").disabled = true; PL.msg($("m"), "Sending…", "info");
+    const redirect = new URL(safeNext, location.href).href;
+    const { error } = await PL.sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: true } });
+    $("send").disabled = false;
+    if (error) return PL.msg($("m"), error.message.includes("rate") ? "Too many emails sent. Please wait a few minutes and try again." : error.message, "err");
+    $("f1").classList.add("hide"); $("f2").classList.remove("hide");
+    PL.msg($("m"), "Email sent to " + email, "ok");
+  };
+  $("f2").onsubmit = async (e) => {
+    e.preventDefault();
+    const { error } = await PL.sb.auth.verifyOtp({ email: $("email").value.trim().toLowerCase(), token: $("code").value.trim(), type: "email" });
+    if (error) return PL.msg($("m"), "That code did not work. Check it, or use the link in the email.", "err");
+    location.href = safeNext;
+  };
+  $("again").onclick = (e) => { e.preventDefault(); $("f2").classList.add("hide"); $("f1").classList.remove("hide"); $("m").className = "msg"; };
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Upload notes · PharmaLeaf admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</head>
+<body>
+<main class="wrap" style="max-width:860px;padding-top:32px;padding-bottom:60px">
+  <h1 class="k" style="font-size:40px;margin:0 0 6px">Upload notes PDFs</h1>
+  <p class="muted">Only the owner's account can upload. Choose any number of PharmaLeaf PDFs (for example everything in Documents/PharmaLeaf/PDFs). Files are matched by their code (BP101T ... BP805T) and stored privately; students only get watermarked copies.</p>
+  <div class="panel form">
+    <input type="file" id="files" accept="application/pdf" multiple class="f">
+    <button class="btn btn-green" id="go" disabled>Upload</button>
+    <div class="msg" id="m"></div>
+  </div>
+  <table class="subjects" style="margin-top:20px"><thead><tr><th>Code</th><th>Subject</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table>
+</main>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const $ = (id) => document.getElementById(id);
+  const sess = await PL.session();
+  if (!sess) { location.href = "login.html?next=admin.html"; return; }
+  const list = await PL.catalogue();
+  const files = (list || []).flatMap((p) => p.files.map((f) => ({ ...f, path: `bpharm/sem${p.semester}/${f.code}.pdf`, sem: p.semester })));
+  async function status() {
+    const have = new Set();
+    for (let s = 1; s <= 8; s++) {
+      const { data } = await PL.sb.storage.from("notes").list(`bpharm/sem${s}`, { limit: 100 });
+      (data || []).forEach((o) => have.add(`bpharm/sem${s}/${o.name}`));
+    }
+    $("rows").innerHTML = files.map((f) => `<tr><td><b>${f.code}</b></td><td>${PL.esc(f.title)}</td><td id="st-${f.code}">${have.has(f.path) ? "✅ uploaded" : "⬜ missing"}</td></tr>`).join("");
+    return have;
+  }
+  await status();
+  $("files").onchange = () => { $("go").disabled = !$("files").files.length; };
+  $("go").onclick = async () => {
+    $("go").disabled = true;
+    const chosen = [...$("files").files];
+    let ok = 0, skipped = [];
+    for (const file of chosen) {
+      const code = (file.name.match(/BP\d{3}T/i) || [""])[0].toUpperCase();
+      const f = files.find((x) => x.code === code);
+      if (!f) { skipped.push(file.name); continue; }
+      const cell = $("st-" + code); if (cell) cell.textContent = "⏳ uploading…";
+      const { error } = await PL.sb.storage.from("notes").upload(f.path, file, { upsert: true, contentType: "application/pdf" });
+      if (cell) cell.textContent = error ? "❌ " + error.message : "✅ uploaded";
+      if (!error) ok++;
+    }
+    PL.msg($("m"), `${ok} file(s) uploaded.` + (skipped.length ? ` Skipped (no code in name): ${skipped.join(", ")}` : ""), skipped.length ? "info" : "ok");
+    $("go").disabled = false;
+  };
+});
+</script>
+</body>
+</html>

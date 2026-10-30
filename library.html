@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Library · PharmaLeaf</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</head>
+<body>
+<main class="wrap" style="max-width:860px;padding-top:32px;padding-bottom:60px">
+  <h1 class="k" style="font-size:44px;margin:0 0 4px">My Library</h1>
+  <p class="muted" id="who" style="margin:0 0 20px"></p>
+  <div class="msg" id="m"></div>
+  <div id="list"></div>
+</main>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const $ = (id) => document.getElementById(id);
+  // wait for a login link in the address bar to be processed
+  await new Promise((r) => setTimeout(r, 300));
+  const sess = await PL.session();
+  if (!sess) { location.href = "login.html?next=library.html"; return; }
+  $("who").textContent = "Logged in as " + sess.user.email;
+
+  async function load(tries) {
+    const res = await PL.callFn("library");
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return PL.msg($("m"), d.error || "Could not load your library.", "err");
+    if (!d.items.length && d.pending && d.pending.length && tries > 0) {
+      PL.msg($("m"), "Confirming your payment…", "info");
+      return setTimeout(() => load(tries - 1), 4000);
+    }
+    if (PL.qs("paid") && d.items.length) PL.msg($("m"), "Payment successful. Your notes are ready below.", "ok");
+    else if (!d.items.length) { $("m").className = "msg"; }
+    $("list").innerHTML = d.items.length ? d.items.map((it) => `
+      <section class="panel lib-sem">
+        <h2 class="k" style="margin:0 0 6px;font-size:30px">${PL.esc(it.title)}</h2>
+        ${it.files.map((f) => `<div class="lib-file"><div><b>${PL.esc(f.code)}</b> ${PL.esc(f.title)}<div class="muted" style="font-size:14px">${f.pages || ""} pages · PDF</div></div>
+          <button class="btn btn-green btn-sm" data-p="${it.id}" data-c="${f.code}">Download</button></div>`).join("")}
+      </section>`).join("")
+      : `<div class="panel"><p style="margin:0 0 12px">You have not bought any notes yet.</p><a class="btn btn-green" href="index.html#notes">Choose your semester</a>
+         ${d.pending && d.pending.length ? '<p class="muted" style="font-size:14px;margin:12px 0 0">Paid but not showing? Wait a minute and refresh. If it still does not appear, contact us with your payment ID.</p>' : ""}</div>`;
+    document.querySelectorAll("[data-c]").forEach((b) => b.onclick = () => download(b));
+  }
+
+  async function download(b) {
+    const old = b.textContent; b.disabled = true; b.textContent = "Preparing…";
+    try {
+      const res = await PL.callFn("download", { product_id: b.dataset.p, code: b.dataset.c });
+      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || "Download failed."); }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = `PharmaLeaf_${b.dataset.c}.pdf`;
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+      b.textContent = "Downloaded";
+    } catch (e) { PL.msg($("m"), e.message, "err"); b.textContent = old; }
+    b.disabled = false;
+  }
+  load(PL.qs("paid") ? 8 : 0);
+});
+</script>
+</body>
+</html>

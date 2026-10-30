@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PharmaLeaf: B.Pharm notes for all 8 semesters</title>
+<meta name="description" content="Easy B.Pharm notes for all 8 semesters as per the PCI 2026 (NEP 2020) syllabus: syllabus order, tables, simple diagrams and quick revision. Instant PDF download.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</head>
+<body>
+<main>
+  <section class="hero"><div class="wrap">
+    <div style="flex:1 1 440px;min-width:0">
+      <p class="eyebrow">B.PHARM · PCI 2026 SYLLABUS (NEP 2020) · RUHS</p>
+      <h1>Notes that make pharmacy easy to remember</h1>
+      <p class="lead">All theory subjects of all 8 semesters, written step by step in syllabus order, in easy English, with tables, simple diagrams and a quick revision for every unit.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <a class="btn btn-green" href="#notes">Choose your semester</a>
+        <a class="btn btn-line" href="samples/PharmaLeaf_sample_sem1_BP101T.pdf" target="_blank" rel="noopener">See a free sample</a>
+      </div>
+      <div class="ticks"><span>Pay by UPI, card or net banking</span><span>Instant PDF download</span><span>49 subjects ready</span></div>
+    </div>
+    <div class="stack" aria-hidden="true">
+      <img src="img/page_a.jpg" alt="">
+      <img src="img/page_b.jpg" alt="">
+      <div class="sticker">Simple, exam-ready diagrams</div>
+    </div>
+  </div></section>
+
+  <section class="block" id="notes"><div class="wrap">
+    <h2 class="sec">Choose your semester</h2>
+    <p class="sub">One payment unlocks every theory subject of that semester. Practicals and elective (AEC / SEC / VAC) courses are not included.</p>
+    <div class="grid" id="sems"><p class="muted">Loading semesters…</p></div>
+  </div></section>
+
+  <section class="block" id="how" style="padding-top:12px"><div class="wrap">
+    <h2 class="sec">How it works</h2>
+    <div class="steps" style="margin-top:20px">
+      <div class="step"><div class="num" style="background:#2B6CB0">1</div><h3 style="margin:0 0 4px;font-size:19px">Log in with your email</h3><p class="muted" style="margin:0">We email you a one-time login link. No password to remember.</p></div>
+      <div class="step"><div class="num" style="background:#C05621">2</div><h3 style="margin:0 0 4px;font-size:19px">Pay securely</h3><p class="muted" style="margin:0">UPI, debit or credit card, or net banking through Razorpay.</p></div>
+      <div class="step"><div class="num" style="background:#2F855A">3</div><h3 style="margin:0 0 4px;font-size:19px">Download any time</h3><p class="muted" style="margin:0">Every subject PDF stays in My Library. Download it again whenever you need it.</p></div>
+    </div>
+  </div></section>
+
+  <section class="mint"><div class="wrap block">
+    <h2 class="sec">Why students like PharmaLeaf</h2>
+    <div class="grid" style="margin-top:20px">
+      <div class="why"><h3>Exactly in syllabus order</h3><p>Unit, topic and sub-topic of the PCI 2026 syllabus, so no line is missed.</p></div>
+      <div class="why"><h3>Diagrams you can redraw</h3><p>Simple, labelled drawings and flow charts you can copy in the exam.</p></div>
+      <div class="why"><h3>Tables and comparisons</h3><p>Differences, classifications and drug lists in easy tables.</p></div>
+      <div class="why"><h3>Quick revision</h3><p>A revision table and yellow "Remember" boxes for the night before the exam.</p></div>
+    </div>
+  </div></section>
+
+  <section class="block"><div class="wrap" style="max-width:860px">
+    <h2 class="sec">Questions</h2>
+    <details open><summary>What do I get for one semester?</summary><p class="muted">The complete notes of every theory subject in that semester as separate PDFs (for example, Semester 1 has 6 subjects). Practicals and elective courses are not included.</p></details>
+    <details><summary>How do I get the PDFs after paying?</summary><p class="muted">Right after payment you are taken to My Library, where each subject has a Download button. Log in with the same email any time to download again.</p></details>
+    <details><summary>Can I share the PDFs?</summary><p class="muted">No. Each copy is for one student and carries the buyer's name, email and order number on every page.</p></details>
+    <details><summary>Which syllabus do the notes follow?</summary><p class="muted">The PCI B.Pharm Syllabus 2026 (NEP 2020). PharmaLeaf is not an official PCI or RUHS publication.</p></details>
+    <details><summary>Payment done but notes not showing?</summary><p class="muted">Wait one minute and refresh My Library. If they still do not appear, write to us from the Contact page with your payment ID.</p></details>
+  </div></section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const box = document.getElementById("sems");
+  const list = await PL.catalogue();
+  if (!list) { box.innerHTML = '<p class="muted">Could not load semesters. Please refresh the page.</p>'; return; }
+  box.innerHTML = list.map((p) => {
+    const n = p.files.length;
+    const live = p.status === "live" && n > 0;
+    return `<article class="card">
+      <img class="thumb" src="img/cover_sem${p.semester}.jpg" alt="First page of the Semester ${p.semester} notes" loading="lazy">
+      <div class="body">
+        <div><span class="pill pill-o">B.Pharm</span> <span class="pill pill-g">${n} subjects</span></div>
+        <h3>Semester ${p.semester}</h3>
+        <p class="muted" style="margin:0;font-size:14px">${p.files.map((f) => PL.esc(f.title)).join(" · ")}</p>
+        <p style="margin:0;font-size:14px">${p.pages || ""} pages of notes · PDF</p>
+        <div class="row"><span class="price">${live ? PL.rupees(p.price_inr) : "Coming soon"}</span>
+        <a class="btn btn-green btn-sm" href="semester.html?s=${p.semester}">View</a></div>
+      </div></article>`;
+  }).join("");
+});
+</script>
+</body>
+</html>

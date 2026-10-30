@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B.Pharm semester notes · PharmaLeaf</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</head>
+<body>
+<main class="wrap">
+  <p class="crumb"><a href="index.html">Home</a> / <span id="crumb">Semester</span></p>
+  <div class="two" style="padding:18px 0 48px">
+    <div>
+      <div><span class="pill pill-o" id="pill-sem">B.Pharm</span> <span class="pill pill-b">PCI 2026 (NEP 2020)</span></div>
+      <h1 class="k" style="font-size:clamp(36px,6vw,50px);line-height:1.08;margin:10px 0 6px" id="title">Loading…</h1>
+      <p class="muted" style="margin:0 0 18px">All theory subjects of this semester as separate PDF notes.</p>
+      <table class="subjects"><thead><tr><th>Code</th><th>Subject</th><th>Pages</th></tr></thead><tbody id="rows"></tbody></table>
+      <p class="muted" style="font-size:14px">Practicals and elective courses (AEC / SEC / VAC) are not included.</p>
+      <img id="cover" alt="" style="width:100%;max-width:420px;border:1.5px solid #D1D5DB;border-radius:10px;margin-top:10px">
+    </div>
+
+    <aside class="panel" style="position:sticky;top:90px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px"><span class="price" style="font-size:34px" id="price">…</span><span class="muted">one-time payment</span></div>
+      <p class="muted" style="margin:0 0 16px;font-size:15px" id="incl"></p>
+
+      <div id="need-login" class="hide">
+        <a class="btn btn-green" style="width:100%" id="login-link" href="login.html">Log in to buy</a>
+        <p class="muted" style="font-size:14px;margin:10px 0 0">We email you a one-time login link. Your notes are saved to that email.</p>
+      </div>
+
+      <div id="owned" class="hide"><div class="msg show ok">You already own this semester.</div><a class="btn btn-green" style="width:100%;margin-top:12px" href="library.html">Open My Library</a></div>
+
+      <form id="buy" class="form hide" novalidate>
+        <p style="margin:0;font-size:15px">Logged in as <b id="who"></b></p>
+        <label class="f">Full name (printed on your PDFs)<input class="f" id="name" autocomplete="name" required maxlength="60"></label>
+        <label class="f">Mobile number<input class="f" id="phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="10-digit mobile number" required></label>
+        <label class="agree"><input type="checkbox" id="agree"><span>I understand these notes are for my personal use. My name, email and order number will appear as a light watermark on every page. I accept the <a href="terms.html" target="_blank">Terms</a> and <a href="refund.html" target="_blank">Refund policy</a>.</span></label>
+        <button class="btn btn-green" id="pay" type="submit" disabled>Pay</button>
+        <div class="msg" id="m"></div>
+        <p class="muted" style="font-size:14px;margin:0">You choose UPI, card or net banking in the secure Razorpay window.</p>
+      </form>
+      <a class="btn btn-line" style="width:100%;margin-top:14px" id="sample" target="_blank" rel="noopener">Download free sample</a>
+    </aside>
+  </div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const s = Number(PL.qs("s") || 1);
+  const list = await PL.catalogue();
+  const p = list && list.find((x) => x.semester === s);
+  const $ = (id) => document.getElementById(id);
+  if (!p) { $("title").textContent = "Semester not found"; return; }
+  document.title = `B.Pharm Semester ${s} notes · PharmaLeaf`;
+  $("crumb").textContent = `B.Pharm Semester ${s}`;
+  $("pill-sem").textContent = `B.Pharm Semester ${s}`;
+  $("title").textContent = `B.Pharm Semester ${s}`;
+  $("rows").innerHTML = p.files.map((f) => `<tr><td><b>${PL.esc(f.code)}</b></td><td>${PL.esc(f.title)}</td><td>${f.pages ?? ""}</td></tr>`).join("");
+  $("cover").src = `img/cover_sem${s}.jpg`;
+  $("incl").textContent = `${p.files.length} subjects · ${p.pages || ""} pages · instant download`;
+  const first = p.files[0];
+  $("sample").href = `samples/PharmaLeaf_sample_sem${s}_${first ? first.code : ""}.pdf`;
+  $("sample").textContent = `Free sample: ${first ? first.code : ""} (4 pages)`;
+  const live = p.status === "live" && p.price_inr > 0;
+  $("price").textContent = live ? PL.rupees(p.price_inr) : "Coming soon";
+  $("pay").textContent = `Pay ${PL.rupees(p.price_inr)}`;
+  if (!live) return;
+
+  const sess = await PL.session();
+  if (!sess) {
+    $("login-link").href = `login.html?next=${encodeURIComponent("semester.html?s=" + s)}`;
+    $("need-login").classList.remove("hide");
+    return;
+  }
+  const lib = await (await PL.callFn("library")).json().catch(() => ({}));
+  if (lib.items && lib.items.some((i) => i.id === p.id)) { $("owned").classList.remove("hide"); return; }
+
+  const form = $("buy"); form.classList.remove("hide");
+  $("who").textContent = sess.user.email;
+  try { const saved = JSON.parse(localStorage.getItem("pl_buyer") || "{}"); $("name").value = saved.name || ""; $("phone").value = saved.phone || ""; } catch (e) {}
+  $("agree").onchange = () => { $("pay").disabled = !$("agree").checked; };
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const name = $("name").value.trim(), phone = $("phone").value.trim();
+    if (name.length < 2) return PL.msg($("m"), "Please enter your full name.", "err");
+    if (!/^(\+?91)?[6-9]\d{9}$/.test(phone.replace(/[\s-]/g, ""))) return PL.msg($("m"), "Please enter a valid 10-digit mobile number.", "err");
+    try { localStorage.setItem("pl_buyer", JSON.stringify({ name, phone })); } catch (e) {}
+    $("pay").disabled = true; PL.msg($("m"), "Starting secure payment…", "info");
+    const res = await PL.callFn("create-order", { product_id: p.id, name, phone });
+    const o = await res.json().catch(() => ({}));
+    if (!res.ok) { $("pay").disabled = false; return PL.msg($("m"), o.error || "Could not start the payment.", "err"); }
+    const rzp = new Razorpay({
+      key: o.key_id, amount: o.amount, currency: o.currency, order_id: o.order_id,
+      name: "PharmaLeaf", description: o.product_title, prefill: o.prefill, theme: { color: "#2F855A" },
+      handler: async (r) => {
+        PL.msg($("m"), "Payment received. Confirming…", "info");
+        const v = await PL.callFn("verify-payment", r);
+        if (v.ok) { location.href = "library.html?paid=1"; }
+        else { const j = await v.json().catch(() => ({})); PL.msg($("m"), (j.error || "We could not confirm the payment yet.") + " If money was deducted, open My Library in a minute.", "err"); }
+      },
+      modal: { ondismiss: () => { $("pay").disabled = false; PL.msg($("m"), "Payment cancelled. You can try again.", "info"); } },
+    });
+    rzp.on("payment.failed", (r) => { $("pay").disabled = false; PL.msg($("m"), "Payment failed: " + (r.error && r.error.description || "please try again."), "err"); });
+    rzp.open();
+  };
+});
+</script>
+</body>
+</html>
