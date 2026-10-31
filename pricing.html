@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing · PharmaLeaf</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</head>
+<body>
+<main class="wrap prose" style="padding-bottom:50px">
+<h1>Pricing</h1>
+<p class="muted">Last updated: <span data-cfg="lastUpdated"></span></p>
+<p>All prices are in Indian Rupees (INR) and are the final amount you pay. There are no hidden charges, subscriptions or renewals.</p>
+<table class="subjects" style="max-width:720px"><thead><tr><th>Product</th><th>What you get</th><th>Price</th></tr></thead><tbody id="ptable"><tr><td colspan="3">Loading prices…</td></tr></tbody></table>
+<h2>How payment works</h2>
+<ul><li>Pay once per semester by UPI, debit or credit card, or net banking through Razorpay.</li><li>Access is lifetime: download your semester's PDFs again any time from My Library.</li><li>See the <a href="refund.html">Refund and cancellation policy</a> and the <a href="shipping.html">Delivery policy</a>.</li></ul>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const list = await PL.catalogue();
+  const t = document.getElementById("ptable");
+  if (!list) { t.innerHTML = '<tr><td colspan="3">B.Pharm Semester 1 to 8 notes: Rs 249 per semester</td></tr>'; return; }
+  t.innerHTML = list.map(p => `<tr><td><b>B.Pharm Semester ${p.semester}</b></td><td>${p.files.length} subject PDFs (${p.pages || ""} pages)</td><td><b>${p.status === "live" ? PL.rupees(p.price_inr) : "Coming soon"}</b></td></tr>`).join("");
+});
+</script>
+</main>
+</body>
+</html>
