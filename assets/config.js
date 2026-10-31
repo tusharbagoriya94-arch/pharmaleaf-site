@@ -10,7 +10,7 @@ window.PL_CONFIG = {
   email: "surekhapharmaceuticals@gmail.com",
   phone: "+91 90797 59888",
   address: "Chittorgarh, Rajasthan 312027, India",
-  lastUpdated: "30 October 2026",
+  lastUpdated: "31 October 2026",
 
   // Fallback price if the database cannot be reached (the real price always comes from the database).
   defaultPrice: 249,
