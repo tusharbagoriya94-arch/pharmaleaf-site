@@ -30,7 +30,7 @@
       <div style="max-width:520px"><p class="k" style="margin:0 0 4px;font-weight:700;font-size:22px;color:#276749">PharmaLeaf</p>
       <p style="margin:0">B.Pharm notes prepared as per the PCI 2026 (NEP 2020) syllabus, followed by RUHS. PharmaLeaf is not an official PCI or RUHS publication.</p>
       <p style="margin:6px 0 0">Contact: <a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p></div>
-      <nav aria-label="Policies"><a href="terms.html">Terms and conditions</a><a href="privacy.html">Privacy policy</a><a href="refund.html">Refund and cancellation</a><a href="shipping.html">Delivery policy</a><a href="contact.html">Contact us</a></nav>
+      <nav aria-label="Policies"><a href="about.html">About us</a><a href="pricing.html">Pricing</a><a href="terms.html">Terms and conditions</a><a href="privacy.html">Privacy policy</a><a href="refund.html">Refund and cancellation</a><a href="shipping.html">Delivery policy</a><a href="contact.html">Contact us</a></nav>
       </div>`;
     document.body.append(f);
   }
