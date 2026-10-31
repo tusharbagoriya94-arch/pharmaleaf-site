@@ -7,7 +7,7 @@ window.PL_CONFIG = {
   // Business details shown on the Contact, Terms and Refund pages (Razorpay checks these).
   businessName: "PharmaLeaf",          // or your registered business / proprietor name
   ownerName: "Tushar Bagoriya",
-  email: "tusharbagoriya94@gmail.com",
+  email: "surekhapharmaceuticals@gmail.com",
   phone: "+91 90797 59888",
   address: "Chittorgarh, Rajasthan 312027, India",
   lastUpdated: "30 October 2026",
